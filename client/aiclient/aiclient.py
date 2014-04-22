@@ -19,6 +19,8 @@ import logging
 import random
 from game.cards.card import ACTION, TREASURE
 
+import operator
+
 names = [
     'Jacob',
     'Isabella',
@@ -98,11 +100,13 @@ class DominionPolicy:
         return sorted([card for (card,amount) in self.cardsToBuy.items() if amount],key=lambda card: card.cost, reverse=True)
 
 def moneyAvailable(aiclient): 
-    return (0,0) if not len(aiclient.hand.cards) else map(sum,zip(*[card.getMoney() for card in aiclient.hand.cards + aiclient.board.cards]))
+    return (0,0) if not len(aiclient.hand.cards) or not len(aiclient.board.cards) else map(sum,zip(*[card.getMoney() for card in aiclient.hand.cards + aiclient.board.cards]))
 
 def canBuy(card,money):
     return all([valueCard <= valueMoney for valueCard,valueMoney in zip(*[card.cost,money])])
 
+def sub(current,price): 
+    return tuple(map(operator.sub,current,price))
 
 class _BigMoneyStrategy(_Strategy):
     
@@ -111,7 +115,8 @@ class _BigMoneyStrategy(_Strategy):
     
     def _cards_to_buy_gen(self, aiclient):
         for card in self.policy.cards():
-            if canBuy(card,moneyAvailable(aiclient)):
+#             if canBuy(card,moneyAvailable(aiclient)):
+            if canBuy(card,aiclient.money):
                 self.policy.cardsToBuy[card] -= 1
                 yield card
 
@@ -238,6 +243,8 @@ class _AiClient(object):
         return 
     
     def do_buy(self):
+        self.money = moneyAvailable(self)
+        
         t = [c for c in self.hand if c.cardtype & TREASURE]
         if t:
             card = next(c for c in t)
@@ -246,12 +253,22 @@ class _AiClient(object):
             self.wait(PlayerInfoEvent)
             return
         
-        card = self.strategy.choose_card_to_buy(self)
-        if card:
-            time.sleep(0.2)
-            self.buy_card(card)
-        else:
-            EndPhaseEvent().post(self.ev)
+        while True:
+            card = self.strategy.choose_card_to_buy(self)
+            if card:
+                time.sleep(0.2)
+                self.buy_card(card)
+                self.money = sub(self.money, card.cost)
+            else:
+                break
+        EndPhaseEvent().post(self.ev)
+        
+#         card = self.strategy.choose_card_to_buy(self)
+#         if card:
+#             time.sleep(0.2)
+#             self.buy_card(card)
+#         else:
+#             EndPhaseEvent().post(self.ev)
         self.wait(PhaseChangedEvent)
         # AI wont buy cards because automatic skipping of action phase
         
@@ -296,3 +313,5 @@ class _AiClient(object):
             
         if self.phase == P_BUY:
             self.do_buy()
+    
+        
