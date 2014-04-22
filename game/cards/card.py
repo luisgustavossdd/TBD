@@ -62,3 +62,6 @@ class Card(object):
 
     def handle_trigger(self, trigger):
         pass
+
+    def getMoney(self):
+        return (0,0)

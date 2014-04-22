@@ -19,6 +19,8 @@ class Silver(Card):
     def action_step(self, game, player):
         self.buy_step(game, player)
 
+    def getMoney(self):
+        return (2,0)
 
 class Curse(Card):
 
@@ -32,6 +34,8 @@ class Curse(Card):
     def end_step(self, game, player):
         player.score -= 1
 
+    def getMoney(self):
+        return (-1,0)
 
 class Estate(Card):
 
@@ -61,6 +65,8 @@ class Potion(Card):
     def action_step(self, game, player):
         self.buy_step(game, player)
 
+    def getMoney(self):
+        return (0,1)
 
 class Duchy(Card):
 
@@ -90,6 +96,8 @@ class Copper(Card):
     def action_step(self, game, player):
         self.buy_step(game, player)
 
+    def getMoney(self):
+        return (1,0)
 
 class Province(Card):
 
@@ -119,4 +127,6 @@ class Gold(Card):
     def action_step(self, game, player):
         self.buy_step(game, player)
 
+    def getMoney(self):
+        return (3,0)
 

@@ -33,8 +33,9 @@ class ResourceManager(object):
         
     def load_images(self, path, size, modifier=None, extensions='.png;.jpg'):
         extensions = filter(None, extensions.split(';'))
-            
+        
         files = [f for f in os.listdir(path) if splitext(f)[1] in extensions]
+        
         for f in files:
             fullpath = join(path, f)
             self.load(fullpath, size, modifier)

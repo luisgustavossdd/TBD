@@ -42,7 +42,6 @@ names = [
     'Mia',
     ]
 
-
 def get_random_name():
     return random.choice(names)
 
@@ -58,7 +57,6 @@ def _crap_generator(aiclient):
             yield c
     for c in aiclient.hand:
         yield c
-
 
 def can_afford(aiclient, card):
     return aiclient.player.money >= card.cost[0] and aiclient.player.potion >= card.cost[1]  
@@ -91,33 +89,31 @@ class _Strategy(object):
     def _handle_card_torturer(self, aiclient, card):
         AnswerEvent(aiclient.last_info.answers[1]).post(aiclient.ev)
         
+class DominionPolicy:
+    pass
+    def __init__(self):
+        self.cardsToBuy = {Gold:2, Province:8, Silver:6}
+
+    def cards(self):
+        return sorted([card for (card,amount) in self.cardsToBuy.items() if amount],key=lambda card: card.cost, reverse=True)
+
+def moneyAvailable(aiclient): 
+    return (0,0) if not len(aiclient.hand.cards) else map(sum,zip(*[card.getMoney() for card in aiclient.hand.cards + aiclient.board.cards]))
+
+def canBuy(card,money):
+    return all([valueCard <= valueMoney for valueCard,valueMoney in zip(*[card.cost,money])])
+
+
 class _BigMoneyStrategy(_Strategy):
     
+    def __init__(self):
+        self.policy = DominionPolicy()
+    
     def _cards_to_buy_gen(self, aiclient):
-##        print [c.__class__.__name__ for c in aiclient.deck]
-##        print [c.__class__.__name__ for c in aiclient.board]
-##        print [c.__class__.__name__ for c in aiclient.hand]
-##        print [c.player_name for c in aiclient.players]
-##        print [p.card for p in aiclient.boardsetup] #boardsetup contains the random kingdom cards
-##        print [p.card for p in aiclient.boardcommon] #boardcommon contains the treasures and victory cards
-
-        if(any(isinstance(card,Market) for card in aiclient.boardsetup)):
-            yield Market
-
-##        for p in aiclient.boardsetup + aiclient.boardcommon:
-##            yield p.card
-            
-##        yield aiclient.boardsetup[0].card
-            
-        yield Copper
-        
-        if count(aiclient, Gold) >= 2:
-            yield Province
-        
-        yield Gold
-        
-        if count(aiclient, Gold) < 5 and count(aiclient, Silver) < 6:
-            yield Silver
+        for card in self.policy.cards():
+            if canBuy(card,moneyAvailable(aiclient)):
+                self.policy.cardsToBuy[card] -= 1
+                yield card
 
 class _AiClient(object):
 
@@ -176,14 +172,19 @@ class _AiClient(object):
         logging.debug("connection failed")
 
     def handle_newhandevent(self, event):
+#         print "Player:",self.id
+#         print "hand ",[card.__class__.__name__ for card in event.hand]
+#         print "deck ",[card.__class__.__name__ for card in event.deck]
         self.hand = event.hand
         self.deck = event.deck
         #logging.debug("AICLIENT got hand %s", " ".join([str(c.id) for c in self.hand]))
         
     def handle_newboardsetupevent(self, event):
+#         print "board  ",[(pile.cards[0].__class__.__name__,len(pile.cards)) for pile in event.boardsetup]
         self.boardsetup = event.boardsetup
         
     def handle_newboardevent(self, event):
+#         print "board ",[card.__class__.__name__ for card in event.board]
         self.board = event.board
     
     def handle_newdeckevent(self, event):
@@ -243,7 +244,7 @@ class _AiClient(object):
             logging.debug("playing card %s", str(card.name))
             PlayCardEvent(card.id).post(self.ev)
             self.wait(PlayerInfoEvent)
-            return 
+            return
         
         card = self.strategy.choose_card_to_buy(self)
         if card:
