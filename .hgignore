@@ -1,0 +1,7 @@
+syntax: glob
+*.orig
+*.pyc
+dominion.diehrstraits.com
+log.out
+res/cards_full/*.jpg
+*.bak
