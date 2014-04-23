@@ -65,3 +65,6 @@ class Card(object):
 
     def getMoney(self):
         return (0,0)
+    
+    def getVictoryPoints(self):
+        return 0

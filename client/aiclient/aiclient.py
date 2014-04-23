@@ -66,6 +66,104 @@ def can_afford(aiclient, card):
 def count(aiclient, card):
     return len([c for c in aiclient.deck if isinstance(c, card)])
 
+def moneyAvailable(aiclient): 
+    return (0,0) if not len(aiclient.hand.cards) or not len(aiclient.board.cards) else map(sum,zip(*[card.getMoney() for card in aiclient.hand.cards + aiclient.board.cards]))
+
+def canBuy(card,money):
+    return all([valueCard <= valueMoney for valueCard,valueMoney in zip(*[card.cost,money])])
+
+def sub(current,price): 
+    return tuple(map(operator.sub,current,price))
+
+samePile = lambda self,other: all([selfCard == otherCard for (selfCard,otherCard) in zip(*[sorted(self.cards,key=lambda card:card.name),sorted(other.cards,key=lambda card:card.name)])])
+sameCards = lambda self,other: all([selfCard == otherCard for (selfCard,otherCard) in zip(*[sorted(self,key=lambda card:card.name),sorted(other,key=lambda card:card.name)])]) 
+samePiles = lambda self,other: all(samePile(selfPile,otherPile) for (selfPile,otherPile) in zip(*[sorted(self,key=lambda pile: pile.name),sorted(other,key=lambda pile: pile.name)]))
+
+class DominionGameState:
+
+    states = None
+    players = None
+    numPlayers = None
+    initied = False
+    
+    def __init__(self, player, board, cards, players = None):
+        
+            if not DominionGameState.players: 
+                DominionGameState.players = players
+                DominionGameState.numPlayers = len(players)
+                self.cards = dict(zip(*[DominionGameState.players, DominionGameState.numPlayers * [cards]]))
+                DominionGameState.initied = True
+                cards = None
+                
+            if not DominionGameState.states: 
+                DominionGameState.states = [self]
+                
+            self.playerJustMoved = player
+            self.playerIndex = DominionGameState.players.index(player)
+            self.board = board #keys: kingdom's cards #values: quantity
+            self.cards = cards if cards else self.cards #keys: players         #values: player's cards
+            self.visits = 0
+    
+    @staticmethod
+    def isInitied():
+        return DominionGameState.initied
+    
+    def getAlpha(self):
+        return 1.0/(1.0 + self.visits)
+    
+    def nextPlayer(self):
+        self.playerIndex = (self.playerIndex+1)%DominionGameState.numPlayers
+        return DominionGameState.players[self.playerIndex]
+    
+    def isEqual(self,other):
+        sameBoard = self.board == other.board
+        sameDecks = self.cards == other.cards
+#         sameDecks = all([sorted(self.cards[player].values()) == sorted(other.cards[player].values()) for player in DominionGameState.players])
+        return sameBoard and sameDecks
+    
+    def Clone(self):
+        """ Create a deep clone of this game state.
+        """
+        return DominionGameState(self.playerJustMoved, self.board.copy(), self.cards.copy())
+
+    def DoMove(self, move):
+        """ Update a state by carrying out the given move.
+            Must update playerJustMoved.
+        """
+        self.board[move] -= 1
+        self.cards[self.playerJustMoved] += [move]
+        self.playerJustMoved = self.nextPlayer()
+            
+    def generateSuccessor(self,move):
+        successor = self.Clone()
+        successor.DoMove(move)
+        
+        for state in DominionGameState.states:
+            if state.isEqual(successor) : return state
+            
+        return successor
+        
+    def GetMoves(self):
+        """ Get all possible moves from this state.
+        """
+#         SolveHand?
+        return [card for card in self.board.keys() if canBuy(card,moneyAvailable(self.playerJustMoved))]
+    
+    def GetResult(self, playerjm):
+        """ Get the game result from the viewpoint of playerjm. 
+        """
+        # Return only if the game ended?
+        myScore = sum([card.getVictoryPoints() for card in self.cards.get_victories()])
+        otherMaxScore = max([sum([card.getVictoryPoints() for card in player.cards.get_victories()]) for player in self.players if not player == playerjm])
+        
+        noProvinces = len(playerjm.get_pile(Province).cards) == 0
+        threePilesEmpty = ([len(pile.cards) for pile in self.boardsetup]).count(0) >= 3
+        
+        gameEnded = noProvinces or threePilesEmpty
+        
+        #returning only when game is over...shoud return in any state?
+        return (myScore - otherMaxScore) if gameEnded else 0
+
 class _Strategy(object):
     
     def _cards_to_buy_gen(self, aiclient):
@@ -92,26 +190,16 @@ class _Strategy(object):
         AnswerEvent(aiclient.last_info.answers[1]).post(aiclient.ev)
         
 class DominionPolicy:
-    pass
-    def __init__(self):
-        self.cardsToBuy = {Gold:2, Province:8, Silver:6}
+    def __init__(self, cardsToBuy):
+        self.cardsToBuy = cardsToBuy
 
     def cards(self):
         return sorted([card for (card,amount) in self.cardsToBuy.items() if amount],key=lambda card: card.cost, reverse=True)
 
-def moneyAvailable(aiclient): 
-    return (0,0) if not len(aiclient.hand.cards) or not len(aiclient.board.cards) else map(sum,zip(*[card.getMoney() for card in aiclient.hand.cards + aiclient.board.cards]))
-
-def canBuy(card,money):
-    return all([valueCard <= valueMoney for valueCard,valueMoney in zip(*[card.cost,money])])
-
-def sub(current,price): 
-    return tuple(map(operator.sub,current,price))
-
 class _BigMoneyStrategy(_Strategy):
     
-    def __init__(self):
-        self.policy = DominionPolicy()
+    def __init__(self, policy = DominionPolicy({Gold:2, Province:8, Silver:6})):
+        self.policy = policy
     
     def _cards_to_buy_gen(self, aiclient):
         for card in self.policy.cards():
@@ -232,7 +320,7 @@ class _AiClient(object):
     def do_action(self):
         self.wait(PhaseChangedEvent)
 
-        print [c for c in self.hand.cards if c.cardtype == ACTION]
+#         print [c for c in self.hand.cards if c.cardtype == ACTION]
         card = next((c for c in self.hand.cards if c.cardtype == ACTION), None)
         if card:
             logging.debug("playing action %s %i", card, card.id)
@@ -253,12 +341,24 @@ class _AiClient(object):
             self.wait(PlayerInfoEvent)
             return
         
+        if not DominionGameState.isInitied(): 
+            player  = next((p for p in self.players if p.id == self.id), None)
+            board   = dict([(pile.cards[0].__class__,len(pile.cards)) for pile in self.boardsetup] + [(pile.cards[0].__class__,len(pile.cards)) for pile in self.boardcommon])
+            cards   = [card.__class__ for card in self.hand.cards] + [card.__class__ for card in self.deck.cards]
+            players = self.players
+            gameState = DominionGameState(player, board, cards, players)
+            print gameState
+#             self.strategy.init(gameState)
         while True:
             card = self.strategy.choose_card_to_buy(self)
             if card:
                 time.sleep(0.2)
                 self.buy_card(card)
                 self.money = sub(self.money, card.cost)
+                g = gameState.generateSuccessor(card)
+                print g.playerJustMoved
+                print g.board
+                print g.cards
             else:
                 break
         EndPhaseEvent().post(self.ev)
