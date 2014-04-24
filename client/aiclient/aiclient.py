@@ -331,7 +331,10 @@ class _AiClient(object):
             
     def do_action(self):
         self.wait(PhaseChangedEvent)
-
+        # Automatic skipping of action phase
+        EndPhaseEvent(P_ACTION).post(self.ev)
+        return 
+    
 #         print [c for c in self.hand.cards if c.cardtype == ACTION]
         card = next((c for c in self.hand.cards if c.cardtype == ACTION), None)
         if card:
@@ -359,7 +362,8 @@ class _AiClient(object):
 #             players = self.players
             player  = self
             players = [player]
-            board   = dict([(pile.cards[0].__class__,len(pile.cards)) for pile in self.boardsetup] + [(pile.cards[0].__class__,len(pile.cards)) for pile in self.boardcommon])
+#             board   = dict([(pile.cards[0].__class__,len(pile.cards)) for pile in self.boardsetup] + [(pile.cards[0].__class__,len(pile.cards)) for pile in self.boardcommon])
+            board   = dict([(pile.cards[0].__class__,len(pile.cards)) for pile in self.boardcommon])
             cards   = [card.__class__ for card in self.hand.cards] + [card.__class__ for card in self.deck.cards]
             gameState = DominionGameState(player, board, cards, players)
             QLeaner = QLearning()
@@ -390,7 +394,6 @@ class _AiClient(object):
 #         else:
 #             EndPhaseEvent().post(self.ev)
         self.wait(PhaseChangedEvent)
-        # AI wont buy cards because automatic skipping of action phase
         
     def answercard(self, card):
         logging.debug("handle... %s %i", self.board[-1], self.last_id)
