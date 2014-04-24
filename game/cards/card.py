@@ -66,5 +66,14 @@ class Card(object):
     def getMoney(self):
         return (0,0)
     
-    def getVictoryPoints(self):
+    @staticmethod
+    def getVictoryPoints():
+        return 0
+    
+    @staticmethod
+    def getBonusBuys():
+        return 0
+    
+    @staticmethod
+    def getBonusCards():
         return 0

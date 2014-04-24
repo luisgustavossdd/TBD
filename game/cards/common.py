@@ -35,7 +35,11 @@ class Curse(Card):
         player.score -= 1
 
     def getMoney(self):
-        return (-1,0)
+        return (0,0)
+        
+    @staticmethod
+    def getVictoryPoints():
+        return -1
 
 class Estate(Card):
 
@@ -48,6 +52,10 @@ class Estate(Card):
 
     def end_step(self, game, player):
         player.score += 1
+        
+    @staticmethod
+    def getVictoryPoints():
+        return 1
 
 
 class Potion(Card):
@@ -79,6 +87,10 @@ class Duchy(Card):
 
     def end_step(self, game, player):
         player.score += 3
+        
+    @staticmethod
+    def getVictoryPoints():
+        return 3
 
 
 class Copper(Card):
@@ -110,6 +122,10 @@ class Province(Card):
 
     def end_step(self, game, player):
         player.score += 6
+        
+    @staticmethod
+    def getVictoryPoints():
+        return 6
 
 
 class Gold(Card):

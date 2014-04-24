@@ -1,0 +1,17 @@
+/__init__.pyc
+/askplayerinfo.pyc
+/cardprovider.pyc
+/game.pyc
+/gameinterface.pyc
+/gamestates.pyc
+/gametrigger.pyc
+/global_options.pyc
+/infotoken.pyc
+/phase.pyc
+/pile.pyc
+/player.pyc
+/playerinfo.pyc
+/rules.pyc
+/stephandler.pyc
+/subphaseinfo.pyc
+/triggerinfo.pyc

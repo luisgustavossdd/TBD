@@ -1,0 +1,12 @@
+/__init__.pyc
+/animations.pyc
+/async.pyc
+/configprovider.pyc
+/event.pyc
+/latecall.pyc
+/locals.pyc
+/logger.pyc
+/misc.pyc
+/networking.pyc
+/regnancyexception.pyc
+/resourcemanager.pyc

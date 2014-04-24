@@ -18,6 +18,9 @@ from framework.networking import find_server
 import logging
 import random
 from game.cards.card import ACTION, TREASURE
+from game.pile import *
+
+from client.aiclient.util.Learning import QLearning
 
 import operator
 
@@ -130,45 +133,63 @@ class DominionGameState:
         """ Update a state by carrying out the given move.
             Must update playerJustMoved.
         """
+#         self.playerJustMoved = self.nextPlayer()
+        if not move: return
         self.board[move] -= 1
         self.cards[self.playerJustMoved] += [move]
-        self.playerJustMoved = self.nextPlayer()
             
     def generateSuccessor(self,move):
+        
         successor = self.Clone()
         successor.DoMove(move)
         
         for state in DominionGameState.states:
             if state.isEqual(successor) : return state
             
+        DominionGameState.states += [successor]            
         return successor
         
     def GetMoves(self):
         """ Get all possible moves from this state.
         """
 #         SolveHand?
-        return [card for card in self.board.keys() if canBuy(card,moneyAvailable(self.playerJustMoved))]
+#         return [card for card in self.board.keys() if canBuy(card,moneyAvailable(self.playerJustMoved))]
+        return [card for (card, amount) in self.board.items() if amount] + [None]
     
     def GetResult(self, playerjm):
         """ Get the game result from the viewpoint of playerjm. 
         """
         # Return only if the game ended?
-        myScore = sum([card.getVictoryPoints() for card in self.cards.get_victories()])
-        otherMaxScore = max([sum([card.getVictoryPoints() for card in player.cards.get_victories()]) for player in self.players if not player == playerjm])
+        myScore = sum([card.getVictoryPoints() for card in self.cards[playerjm]])
+#         otherMaxScore = max([sum([card.getVictoryPoints() for card in self.cards[player]]) for player in self.players if not player == playerjm])
+        otherMaxScore = 0
         
         noProvinces = len(playerjm.get_pile(Province).cards) == 0
-        threePilesEmpty = ([len(pile.cards) for pile in self.boardsetup]).count(0) >= 3
+        threePilesEmpty = ([cardCount for cardCount in self.board.values()]).count(0) >= 3
         
-        gameEnded = noProvinces or threePilesEmpty
+        self.gameEnded = noProvinces or threePilesEmpty
         
         #returning only when game is over...shoud return in any state?
-        return (myScore - otherMaxScore) if gameEnded else 0
+        return (myScore - otherMaxScore) if self.gameEnded else None
+        
+class DominionPolicy:
+    def __init__(self, cardsToBuy):
+        self.cardsToBuy = cardsToBuy
+
+    def cards(self):
+        return sorted([card for (card,amount) in self.cardsToBuy.items() if amount],key=lambda card: card.cost, reverse=True)
 
 class _Strategy(object):
     
+    def __init__(self, policy):
+        self.policy = policy
+    
     def _cards_to_buy_gen(self, aiclient):
-        for c in Province, Gold, Silver:
-            yield c
+        for card in self.policy.cards():
+#             if canBuy(card,moneyAvailable(aiclient)):
+            if canBuy(card,aiclient.money):
+                self.policy.cardsToBuy[card] -= 1
+                yield card
     
     def choose_card_to_buy(self, aiclient):
         gen = self._cards_to_buy_gen(aiclient)
@@ -188,25 +209,16 @@ class _Strategy(object):
     
     def _handle_card_torturer(self, aiclient, card):
         AnswerEvent(aiclient.last_info.answers[1]).post(aiclient.ev)
-        
-class DominionPolicy:
-    def __init__(self, cardsToBuy):
-        self.cardsToBuy = cardsToBuy
-
-    def cards(self):
-        return sorted([card for (card,amount) in self.cardsToBuy.items() if amount],key=lambda card: card.cost, reverse=True)
-
+                
 class _BigMoneyStrategy(_Strategy):
-    
-    def __init__(self, policy = DominionPolicy({Gold:2, Province:8, Silver:6})):
-        self.policy = policy
-    
-    def _cards_to_buy_gen(self, aiclient):
-        for card in self.policy.cards():
-#             if canBuy(card,moneyAvailable(aiclient)):
-            if canBuy(card,aiclient.money):
-                self.policy.cardsToBuy[card] -= 1
-                yield card
+    def __init__(self):
+        _Strategy.__init__(self, DominionPolicy({Gold:2, Province:8, Silver:6}))
+
+class QLearnerStrategy(_Strategy):
+    def __init__(self, initialState):
+        self.QLeaner = QLearning()
+        self.QLeaner.learn(initialState)
+        _Strategy.__init__(self, self.QLeaner.getPolicy())
 
 class _AiClient(object):
 
@@ -226,9 +238,9 @@ class _AiClient(object):
         self.pipe = get_timeout_pipe(pipe)
         self.id = None
         self.last_id = 0
-        self.board = [] #bot's cards on the board (cards played so far)
+        self.board = Pile() #bot's cards on the board (cards played so far)
         self.deck = [] #all bot's cards
-        self.hand = [] #the bot's hand
+        self.hand = Pile() #the bot's hand
         self.players = [] 
         self.strategy = strategy
         
@@ -341,24 +353,32 @@ class _AiClient(object):
             self.wait(PlayerInfoEvent)
             return
         
+        gameState = None
         if not DominionGameState.isInitied(): 
-            player  = next((p for p in self.players if p.id == self.id), None)
+#             player  = next((p for p in self.players if p.id == self.id), None)
+#             players = self.players
+            player  = self
+            players = [player]
             board   = dict([(pile.cards[0].__class__,len(pile.cards)) for pile in self.boardsetup] + [(pile.cards[0].__class__,len(pile.cards)) for pile in self.boardcommon])
             cards   = [card.__class__ for card in self.hand.cards] + [card.__class__ for card in self.deck.cards]
-            players = self.players
             gameState = DominionGameState(player, board, cards, players)
-            print gameState
+            QLeaner = QLearning()
+            QLeaner.learn(gameState)
+            self.strategy = _Strategy(DominionPolicy(QLeaner.getPolicy()))
+#             logging.debug( "Q: %s", QLeaner.Q)
+#             logging.debug( "states created: %s", len(DominionGameState.states))
+# #             logging.debug( "actions visited: %s", QLeaner.cards)
+            logging.debug( "Policy: %s", QLeaner.getPolicy())
 #             self.strategy.init(gameState)
-        while True:
+
+        buysLeft = 1 + sum([card.getBonusBuys() for card in self.board] + [card.getBonusBuys() for card in self.hand])
+        while buysLeft:
             card = self.strategy.choose_card_to_buy(self)
             if card:
                 time.sleep(0.2)
                 self.buy_card(card)
                 self.money = sub(self.money, card.cost)
-                g = gameState.generateSuccessor(card)
-                print g.playerJustMoved
-                print g.board
-                print g.cards
+                buysLeft -= 1
             else:
                 break
         EndPhaseEvent().post(self.ev)
