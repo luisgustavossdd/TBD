@@ -63,17 +63,56 @@ class Card(object):
     def handle_trigger(self, trigger):
         pass
 
-    def getMoney(self):
-        return (0,0)
+#     def getMoney(self):
+#         return (0,0)
+#     
+#     @staticmethod
+#     def getVictoryPoints():
+#         return 0
+#     
+#     @staticmethod
+#     def getBonusBuys():
+#         return 0
+#     
+#     @staticmethod
+#     def getBonusCards():
+#         return 0
     
-    @staticmethod
-    def getVictoryPoints():
-        return 0
+    money = (0,0)
+    victoryPoints = 0
+    extra_actions= 0
+    extra_cards= 0
+    extra_buys= 0
+    known = False
     
-    @staticmethod
-    def getBonusBuys():
-        return 0
+    @classmethod
+    def getInstructions(cls):
+        return cls.instructions
+
+    @classmethod
+    def getMoney(cls):
+        return cls.money
     
-    @staticmethod
-    def getBonusCards():
-        return 0
+    @classmethod
+    def getVictoryPoints(cls):
+        return cls.victoryPoints
+    
+    @classmethod
+    def getBonus(cls):
+        return (cls.extra_actions,cls.extra_cards,cls.extra_buys)
+    
+    @classmethod
+    def getBonusActions(cls):
+        return cls.extra_actions
+     
+    @classmethod
+    def getBonusCards(cls):
+        return cls.extra_cards
+     
+    @classmethod
+    def getBonusBuys(cls):
+        return cls.extra_buys
+     
+    @classmethod
+    def knowHowUse(cls):
+        return cls.known

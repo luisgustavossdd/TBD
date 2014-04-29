@@ -153,6 +153,10 @@ class Vineyard(Card):
 
 
 class Familiar(Card):
+    
+    known = True
+    extra_actions= 1
+    extra_cards= 1
 
     cardtype = ACTION | ATTACK
     cost = (3, 1)

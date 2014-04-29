@@ -154,6 +154,10 @@ class Diadem(Card):
 
 
 class HuntingParty(Card):
+    
+    known = True
+    extra_actions= 1
+    extra_cards=1
 
     cardtype = ACTION
     cost = (5, 0)

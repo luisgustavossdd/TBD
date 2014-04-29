@@ -244,6 +244,9 @@ class Saboteur(Card):
 
         
 class Torturer(Card):
+    
+    known = True
+    extra_cards= 3
 
     cardtype = ACTION | ATTACK
     cost = (5, 0)
@@ -375,7 +378,10 @@ class Scout(Card):
 
 
 class Conspirator(Card):
-
+    
+    known = True
+    money = (2,0)
+    
     cardtype = ACTION
     cost = (4, 0)
     name = "Conspirator"
@@ -394,6 +400,10 @@ class Conspirator(Card):
 
 
 class Harem(Card):
+    
+    known = True
+    money = (2,0)
+    victoryPoints = 2
 
     cardtype = TREASURE | VICTORY
     cost = (6, 0)
@@ -414,6 +424,9 @@ class Harem(Card):
 
 
 class ShantyTown(Card):
+    
+    known = True
+    extra_actions= 2
 
     cardtype = ACTION
     cost = (3, 0)
@@ -497,6 +510,10 @@ class Pawn(Card):
 
 
 class Bridge(Card):
+    
+    known = True
+    money = (1,0)
+    extra_buys= 1
 
     cardtype = ACTION
     cost = (4, 0)
@@ -556,6 +573,11 @@ class Steward(Card):
 
 
 class GreatHall(Card):
+    
+    known = True
+    victoryPoints = 1
+    extra_actions= 1
+    extra_cards= 1
 
     cardtype = ACTION | VICTORY
     cost = (3, 0)

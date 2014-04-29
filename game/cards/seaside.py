@@ -6,6 +6,9 @@ from game.cards.common import Curse, Copper, Gold
 
 
 class Ghostship(Card):
+    
+    known = True
+    extra_cards= 2
 
     cardtype = ACTION | ATTACK
     cost = (5, 0)
@@ -35,6 +38,10 @@ class Ghostship(Card):
 
 
 class Wharf(Card):
+    
+    known = True
+    extra_cards= 2
+    extra_buys= 1
 
     cardtype = ACTION | DURATION
     cost = (5, 0)
@@ -53,6 +60,8 @@ class Wharf(Card):
 
 
 class Seahag(Card):
+    
+    known = True
 
     cardtype = ACTION | ATTACK
     cost = (4, 0)
@@ -80,6 +89,10 @@ class Seahag(Card):
 
 
 class Caravan(Card):
+    
+    known = True
+    extra_actions= 1
+    extra_cards= 1
 
     cardtype = ACTION | DURATION
     cost = (4, 0)
@@ -124,6 +137,11 @@ class Salvager(Card):
 
 
 class Bazaar(Card):
+    
+    known = True
+    money = (1,0)
+    extra_actions= 2
+    extra_cards=1
 
     cardtype = ACTION
     cost = (5, 0)
@@ -140,6 +158,9 @@ class Bazaar(Card):
 
 
 class MerchantShip(Card):
+    
+    known = True
+    money = (2,0)
 
     cardtype = ACTION | DURATION
     cost = (5, 0)
@@ -186,6 +207,9 @@ class PearlDiver(Card):
 
 
 class Cutpurse(Card):
+    
+    known = True
+    money = (2,0)
 
     cardtype = ACTION | ATTACK
     cost = (4, 0)
@@ -275,6 +299,11 @@ class Warehouse(Card):
 
 
 class Tactician(Card):
+    
+    known = True
+    extra_actions= 1
+    extra_cards= 5
+    extra_buys= 1
 
     cardtype = ACTION | DURATION
     cost = (5, 0)
@@ -383,6 +412,10 @@ class Treasury(Card):
 
 
 class FishingVillage(Card):
+    
+    known = True
+    money = (1,0)
+    extra_actions= 2
 
     cardtype = ACTION | DURATION
     cost = (3, 0)

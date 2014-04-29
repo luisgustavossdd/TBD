@@ -25,6 +25,8 @@ from cards.prosperity import Bank, CountingHouse
 from pile import KingdomPile
 from cards.intrigue import Minion
 
+from client.aiclient.GameState import DominionGameState
+
 commonpiles = (Copper, Silver, Gold, Potion, Estate, Duchy, Province,
                Curse)
 
@@ -89,4 +91,5 @@ def get_setup(setup):
 def game_end(game):
     p = len(game.get_pile(Province))
     e = len([pile for pile in game.allpiles if not len(pile)])
+    if( p == 0 or e >= 3): DominionGameState.reset()
     return p == 0 or e >= 3

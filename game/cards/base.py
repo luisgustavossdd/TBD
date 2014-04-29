@@ -65,6 +65,10 @@ class Moneylender(Card):
 
 class Woodcutter(Card):
 
+    known = True
+    money = (2,0)
+    extra_buys= 1
+    
     cardtype = ACTION
     cost = (3, 0)
     name = "Woodcutter"
@@ -143,6 +147,10 @@ class ThroneRoom(Card):
 
 
 class CouncilRoom(Card):
+    
+    known = True
+    extra_cards= 4
+    extra_buys= 1
 
     cardtype = ACTION
     cost = (5, 0)
@@ -211,6 +219,10 @@ class Library(Card):
 
 
 class Village(Card):
+    
+    known = True
+    extra_actions= 2
+    extra_cards= 1
 
     cardtype = ACTION
     cost = (3, 0)
@@ -226,6 +238,12 @@ class Village(Card):
 
 
 class Market(Card):
+    
+    known = True
+    money = (1,0)
+    extra_actions= 1
+    extra_cards= 1 
+    extra_buys= 1
 
     cardtype = ACTION
     cost = (5, 0)
@@ -351,6 +369,9 @@ class Moat(Card):
             return True
 
 class Witch(Card):
+    
+    known = True
+    extra_cards= 2
 
     cardtype = ACTION | ATTACK
     cost = (5, 0)
@@ -517,6 +538,11 @@ class Thief(Card):
 
 
 class Festival(Card):
+    
+    known = True
+    money = (2,0)
+    extra_actions= 2
+    extra_buys= 1
 
     cardtype = ACTION
     cost = (5, 0)
@@ -554,6 +580,9 @@ class Cellar(Card):
 
 
 class Militia(Card):
+    
+    known = True
+    money = (2,0)
 
     cardtype = ACTION | ATTACK
     cost = (4, 0)
@@ -637,6 +666,10 @@ class Chancellor(Card):
 
 
 class Laboratory(Card):
+    
+    known = True
+    extra_actions= 1
+    extra_cards= 2
 
     cardtype = ACTION
     cost = (5, 0)
@@ -693,6 +726,9 @@ class Remodel(Card):
 
 
 class Smithy(Card):
+    
+    known = True
+    extra_cards= 3
 
     cardtype = ACTION
     cost = (4, 0)

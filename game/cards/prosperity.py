@@ -6,6 +6,10 @@ from game.cards.common import Copper
 
 
 class City(Card):
+    
+    known = True
+    extra_actions= 2
+    extra_cards= 1
 
     cardtype = ACTION
     cost = (5, 0)
@@ -27,6 +31,11 @@ class City(Card):
 
 
 class WorkersVillage(Card):
+    
+    known = True
+    extra_actions= 2
+    extra_cards= 1
+    extra_buys= 1
 
     cardtype = ACTION
     cost = (4, 0)

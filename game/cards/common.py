@@ -6,6 +6,9 @@ from game.cards.card import Card, TREASURE, VICTORY, CURSE
 
 class Silver(Card):
 
+    money = (2,0)
+    known = True
+
     cardtype = TREASURE
     cost = (3, 0)
     name = 'Silver'
@@ -19,10 +22,10 @@ class Silver(Card):
     def action_step(self, game, player):
         self.buy_step(game, player)
 
-    def getMoney(self):
-        return (2,0)
-
 class Curse(Card):
+    
+    victoryPoints = -1
+    known = True
 
     cardtype = CURSE
     cost = (0, 0)
@@ -43,6 +46,9 @@ class Curse(Card):
 
 class Estate(Card):
 
+    victoryPoints = 1
+    known = True
+    
     cardtype = VICTORY
     cost = (2, 0)
     name = 'Estate'
@@ -52,13 +58,12 @@ class Estate(Card):
 
     def end_step(self, game, player):
         player.score += 1
-        
-    @staticmethod
-    def getVictoryPoints():
-        return 1
 
 
 class Potion(Card):
+    
+    money = (0,1)
+    known = True
 
     cardtype = TREASURE
     cost = (4, 0)
@@ -73,10 +78,11 @@ class Potion(Card):
     def action_step(self, game, player):
         self.buy_step(game, player)
 
-    def getMoney(self):
-        return (0,1)
 
 class Duchy(Card):
+
+    victoryPoints = 3
+    known = True
 
     cardtype = VICTORY
     cost = (5, 0)
@@ -87,13 +93,12 @@ class Duchy(Card):
 
     def end_step(self, game, player):
         player.score += 3
-        
-    @staticmethod
-    def getVictoryPoints():
-        return 3
 
 
 class Copper(Card):
+    
+    money = (1,0)
+    known = True
 
     cardtype = TREASURE
     cost = (0, 0)
@@ -108,10 +113,10 @@ class Copper(Card):
     def action_step(self, game, player):
         self.buy_step(game, player)
 
-    def getMoney(self):
-        return (1,0)
-
 class Province(Card):
+    
+    victoryPoints = 6
+    known = True
 
     cardtype = VICTORY
     cost = (8, 0)
@@ -122,13 +127,11 @@ class Province(Card):
 
     def end_step(self, game, player):
         player.score += 6
-        
-    @staticmethod
-    def getVictoryPoints():
-        return 6
-
 
 class Gold(Card):
+    
+    money = (3,0)
+    known = True
 
     cardtype = TREASURE
     cost = (6, 0)
@@ -142,7 +145,4 @@ class Gold(Card):
 
     def action_step(self, game, player):
         self.buy_step(game, player)
-
-    def getMoney(self):
-        return (3,0)
 

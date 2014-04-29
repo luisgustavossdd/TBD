@@ -92,7 +92,7 @@ class Oasis(Card):
 
 
 class Crossroads(Card):
-
+    
     cardtype = ACTION
     cost = (2, 0)
     name = "Crossroads"
@@ -111,6 +111,10 @@ class Crossroads(Card):
 
 
 class NomadCamp(Card):
+    
+    known = True
+    money = (2,0)
+    extra_buys= 1
 
     cardtype = ACTION
     cost = (4, 0)
@@ -129,6 +133,9 @@ class NomadCamp(Card):
 
 
 class Cache(Card):
+    
+    known = True
+    money = (3,0)
 
     cardtype = TREASURE
     cost = (5, 0)
