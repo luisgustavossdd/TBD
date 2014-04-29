@@ -99,6 +99,33 @@ class _AiClient(object):
         self.players = [] 
         self.strategy = strategy
         
+    def init_gamestate(self):
+        if not DominionGameState.isInitied():    
+#             player  = next((p for p in self.players if p.id == self.id), None)
+#             players = self.players
+#             board   = dict([(pile.cards[0].__class__,len(pile.cards)) for pile in self.boardcommon])
+            player  = self
+            players = [player]
+            cards   = [card.__class__ for card in self.hand.cards] + [card.__class__ for card in self.deck.cards]
+            board   = dict([(pile.cards[0].__class__,len(pile.cards)) for pile in self.boardsetup] + [(pile.cards[0].__class__,len(pile.cards)) for pile in self.boardcommon])
+            board.pop(Curse)
+            board.pop(Copper)
+            if not any([pile.cards[0].__class__.cost[1] for pile in self.boardsetup]) and board.has_key(Potion): board.pop(Potion)
+            
+#             gameState = None
+#             gameState = DominionGameState(player, board, cards, players)
+#             QLeaner = QLearning()
+#             QLeaner.learn(gameState)
+            self.strategy = QLearnerStrategy(DominionGameState(player, board, cards, players))
+            
+            
+            if not any([card.cost[1] for card in self.strategy.QLeaner.getPolicy().cardsToBuy.keys()]): self.strategy.QLeaner.getPolicy().pop(Potion)
+            logging.debug( "Policy: %s", self.strategy.getPolicy().cardsToBuy)
+#             logging.debug( "Q: %s", QLeaner.Q)
+#             logging.debug( "states created: %s", len(DominionGameState.states))
+# #           logging.debug( "actions visited: %s", QLeaner.cards)
+#             self.strategy.init(gameState)
+        
     @property
     def active_player(self):
         if self.players:
@@ -152,6 +179,8 @@ class _AiClient(object):
         
     def handle_newboardcommonevent(self, event):
         self.boardcommon = event.boardcommon
+        
+        self.init_gamestate()
            
     def handle_tickevent(self, event):
         if not self.req_con:
@@ -214,30 +243,6 @@ class _AiClient(object):
             PlayCardEvent(card.id).post(self.ev)
             self.wait(PlayerInfoEvent)
             return
-        
-        gameState = None
-        if not DominionGameState.isInitied(): 
-            
-#             player  = next((p for p in self.players if p.id == self.id), None)
-#             players = self.players
-            player  = self
-            players = [player]
-            cards   = [card.__class__ for card in self.hand.cards] + [card.__class__ for card in self.deck.cards]
-            board   = dict([(pile.cards[0].__class__,len(pile.cards)) for pile in self.boardsetup] + [(pile.cards[0].__class__,len(pile.cards)) for pile in self.boardcommon])
-#             board   = dict([(pile.cards[0].__class__,len(pile.cards)) for pile in self.boardcommon])
-            board.pop(Curse)
-            board.pop(Copper)
-            if not any([pile.cards[0].__class__.cost[1] for pile in self.boardsetup]): board.pop(Potion)
-            
-            gameState = DominionGameState(player, board, cards, players)
-#             QLeaner = QLearning()
-#             QLeaner.learn(gameState)
-            self.strategy = QLearnerStrategy(gameState)
-            logging.debug( "Policy: %s", self.strategy.getPolicy().cardsToBuy)
-#             logging.debug( "Q: %s", QLeaner.Q)
-#             logging.debug( "states created: %s", len(DominionGameState.states))
-# #           logging.debug( "actions visited: %s", QLeaner.cards)
-#             self.strategy.init(gameState)
         
         player = [p for p in self.players if p.id == self.id][0]
         while player.buys and self.money:

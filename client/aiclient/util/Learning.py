@@ -13,7 +13,7 @@ ACTION = 1
 
 
 class QLearning:
-    def __init__(self, gamma=0.7, iterations = 1000, explorationRate=0.7):
+    def __init__(self, gamma=0.7, iterations = 1500, explorationRate=0.7):
         self.gamma = gamma
         self.iterations = iterations
         self.explorationRate = explorationRate
@@ -43,6 +43,7 @@ class QLearning:
             maxQ = max([self.Q[(nextState,nextAction)] for nextAction in nextState.GetMoves()]) if nextState else 0
             self.Q[(state,action)] = (1-state.getAlpha())*self.Q[(state,action)] + (state.getAlpha())*((state.GetResult(state.playerJustMoved) or 0)+ self.gamma * maxQ)
             state = nextState if nextState else self.initialState
+            
         print "Q estimatives computed"
             
     def getAction(self,state):
@@ -51,7 +52,7 @@ class QLearning:
     def getActions(self):
         return [element[ACTION] for element in self.Q.keys()]
     
-    def getPolicy(self):
+    def compute_policy(self):
         state = self.initialState
         self.policy = []
         while True:
@@ -64,9 +65,14 @@ class QLearning:
             state.GetResult(state.playerJustMoved)
             if state.gameEnded: break;
         
+        self.policy = DominionPolicy(Counter([action for action in self.policy if action]))
+    
+    def getPolicy(self):
+        if not self.policy: self.compute_policy()
+        return self.policy
 #         print self.policy
 #         print state.GetResult(state.playerJustMoved)
-        return DominionPolicy(Counter([action for action in self.policy if action]))
+#         return DominionPolicy(Counter([action for action in self.policy if action]))
         
         
 #         state = self.initialState
