@@ -120,7 +120,7 @@ class _AiClient(object):
             
             
             if not any([card.cost[1] for card in self.strategy.QLeaner.getPolicy().cardsToBuy.keys()]): self.strategy.QLeaner.getPolicy().pop(Potion)
-            logging.debug( "Policy: %s", self.strategy.getPolicy().cardsToBuy)
+            logging.debug( "Policy: %s", self.strategy.getPolicy())
 #             logging.debug( "Q: %s", QLeaner.Q)
 #             logging.debug( "states created: %s", len(DominionGameState.states))
 # #           logging.debug( "actions visited: %s", QLeaner.cards)

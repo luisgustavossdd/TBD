@@ -44,8 +44,6 @@ class QLearning:
             self.Q[(state,action)] = (1-state.getAlpha())*self.Q[(state,action)] + (state.getAlpha())*((state.GetResult(state.playerJustMoved) or 0)+ self.gamma * maxQ)
             state = nextState if nextState else self.initialState
             
-        print "Q estimatives computed"
-            
     def getAction(self,state):
         return max([(action, self.Q[(state,action)]) for action in state.GetMoves()],key=lambda x: x[1])[0]
     

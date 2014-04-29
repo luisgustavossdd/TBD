@@ -14,3 +14,6 @@ class DominionPolicy:
     def pop(self, card):
         if not self.cardsToBuy.has_key(card): return None
         return self.cardsToBuy.pop(card)
+
+    def __str__(self):
+        return "%s" % dict(zip(*[[card.name for card in self.cardsToBuy.keys()],self.cardsToBuy.values()]))
