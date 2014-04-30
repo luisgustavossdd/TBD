@@ -450,7 +450,7 @@ class _AiClient(object):
         self.utc = utc
         
     def init_gamestate(self):
-        if not DominionGameState.isInitied() and not isinstance(self.strategy, _UCB1_MCTS_Strategy):     
+        if not DominionGameState.isInitied():
 #             player  = next((p for p in self.players if p.id == self.id), None)
 #             players = self.players
 #             board   = dict([(pile.cards[0].__class__,len(pile.cards)) for pile in self.boardcommon])
@@ -458,15 +458,17 @@ class _AiClient(object):
             players = [player]
             cards   = [card.__class__ for card in self.hand.cards] + [card.__class__ for card in self.deck.cards]
             board   = dict([(pile.cards[0].__class__,len(pile.cards)) for pile in self.boardsetup] + [(pile.cards[0].__class__,len(pile.cards)) for pile in self.boardcommon])
-            board.pop(Curse)
-            board.pop(Copper)
-            if not any([pile.cards[0].__class__.cost[1] for pile in self.boardsetup]) and board.has_key(Potion): board.pop(Potion)
             
 #             gameState = None
 #             gameState = DominionGameState(player, board, cards, players)
 #             QLeaner = QLearning()
 #             QLeaner.learn(gameState)
             self.strategy = QLearnerStrategy(DominionGameState(player, board, cards, players))
+            logging.debug( "Policy: %s", self.strategy.getPolicy())
+#             logging.debug( "Q: %s", QLeaner.Q)
+#             logging.debug( "states created: %s", len(DominionGameState.states))
+# #           logging.debug( "actions visited: %s", QLeaner.cards)
+#             self.strategy.init(gameState)
             
             
             if not any([card.cost[1] for card in self.strategy.QLeaner.getPolicy().cardsToBuy.keys()]): self.strategy.QLeaner.getPolicy().pop(Potion)
@@ -533,7 +535,7 @@ class _AiClient(object):
         
     def handle_newboardcommonevent(self, event):
         self.boardcommon = event.boardcommon
-        if self.utc == None:
+        if self.utc == None and not isinstance(self.strategy, _UCB1_MCTS_Strategy):
             self.init_gamestate()
            
     def handle_tickevent(self, event):
@@ -570,23 +572,16 @@ class _AiClient(object):
     def do_action(self):
         self.wait(PhaseChangedEvent)
         if not isinstance(self.strategy, _UCB1_MCTS_Strategy):
-#         # Automatic skipping of action phase
-#         EndPhaseEvent(P_ACTION).post(self.ev)
-#         return 
-    
-#         print [c for c in self.hand.cards if c.cardtype == ACTION]
             player = [p for p in self.players if p.id == self.id][0]
-            while player.actions:
-                card = next((c for c in self.hand.cards if c.cardtype == ACTION), None)
+            action_cards = [c for c in self.hand.cards if c.cardtype == ACTION]
+            for card in action_cards:
+                if not player.actions: break
                 if card:
                     logging.debug("playing action %s %i", card, card.id)
                     PlayCardEvent(card.id).post(self.ev)
                     player.actions-=1
                 else:
                     break
-    
-            EndPhaseEvent(P_ACTION).post(self.ev)
-            return 
         else:
             global seter
             global first_play
@@ -617,12 +612,12 @@ class _AiClient(object):
                 logging.debug("playing action %s %i", card, card.id)
                 PlayCardEvent(card.id).post(self.ev)
             first_play = False
-            EndPhaseEvent(P_ACTION).post(self.ev)
+
+        EndPhaseEvent(P_ACTION).post(self.ev)
+        return 
     
     def do_buy(self):
         if not isinstance(self.strategy, _UCB1_MCTS_Strategy):
-            self.money = moneyAvailable(self)
-            
             t = [c for c in self.hand if c.cardtype & TREASURE]
             if t:
                 card = next(c for c in t)
@@ -632,24 +627,18 @@ class _AiClient(object):
                 return
             
             player = [p for p in self.players if p.id == self.id][0]
+            self.money = (player.money,player.potion)
             while player.buys and self.money:
-                card = self.strategy.choose_card_to_buy(self)
+                card = self.strategy.choose_card_to_buy(self.money)
                 if card:
+                    logging.debug("buying card %s", str(card.name))
                     time.sleep(0.2)
                     self.buy_card(card)
                     self.money = sub(self.money, card.cost)
                     player.buys -= 1
+                    self.strategy.getPolicy().buy(card)
                 else:
                     break
-            EndPhaseEvent().post(self.ev)
-            
-    #         card = self.strategy.choose_card_to_buy(self)
-    #         if card:
-    #             time.sleep(0.2)
-    #             self.buy_card(card)
-    #         else:
-    #             EndPhaseEvent().post(self.ev)
-            self.wait(PhaseChangedEvent)
         else:
             global cards_to_play
             t = [c for c in self.hand if c.cardtype & TREASURE]
@@ -667,10 +656,9 @@ class _AiClient(object):
                 time.sleep(0.2)
                 self.buy_card(card)
                 self.gain_deck.append(card)
-                EndPhaseEvent().post(self.ev)
-            else:
-                EndPhaseEvent().post(self.ev)
-            self.wait(PhaseChangedEvent)
+            
+        EndPhaseEvent().post(self.ev)
+        self.wait(PhaseChangedEvent)
         
     def answercard(self, card):
         logging.debug("handle... %s %i", self.board[-1], self.last_id)
