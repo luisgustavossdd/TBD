@@ -7,11 +7,11 @@ import client.regnancyclient as rc
 import game
 import logging
 
-try:
-    import psyco
-    psyco.full()
-except:
-    pass
+# try:
+#     import psyco
+#     psyco.full()
+# except:
+#     pass
 
 
 logging.basicConfig(level=logging.DEBUG)
