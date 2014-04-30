@@ -22,6 +22,8 @@ class DominionGameState:
     
     def __init__(self, player, board, cards, players = None):
         
+            
+            
             if not DominionGameState.players: 
                 DominionGameState.players = players
                 DominionGameState.numPlayers = len(players)
@@ -38,6 +40,10 @@ class DominionGameState:
             self.cards = cards if cards else self.cards #keys: players         #values: player's cards
             self.visits = 0
             self.gameEnded = False
+            if self.board.has_key(Curse): self.board.pop(Curse)
+            if self.board.has_key(Copper): self.board.pop(Copper)
+            if not any([card.cost[1] for card in self.board]) and self.board.has_key(Potion): self.board.pop(Potion)
+            
     
     @staticmethod
     def isInitied():

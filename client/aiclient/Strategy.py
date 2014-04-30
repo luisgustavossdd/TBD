@@ -24,16 +24,14 @@ class _Strategy(object):
     def __init__(self, policy):
         self.policy = policy
     
-    def _cards_to_buy_gen(self, aiclient):
+    def _cards_to_buy_gen(self, money):
         for card in sorted(self.policy.cards(), key= lambda x: (x.cost, x.getMoney(), x.getBonus(), x.getVictoryPoints()), reverse= True):
-#             if canBuy(card,moneyAvailable(aiclient)):
-            if canBuy(card,aiclient.money):
-                self.policy.cardsToBuy[card] -= 1
+            if canBuy(card, money):
                 yield card
     
-    def choose_card_to_buy(self, aiclient):
-        gen = self._cards_to_buy_gen(aiclient)
-        return next((c for c in gen if can_afford(aiclient, c)), None)
+    def choose_card_to_buy(self, money):
+        gen = self._cards_to_buy_gen(money)
+        return next((c for c in gen if canBuy(c, money)), None)
     
     def handle_card(self, aiclient, card):
 ##        print ">>>>>>>>>>>>>>>>>>>>>>>>>>Need to answeerr!!"

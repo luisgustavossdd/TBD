@@ -451,32 +451,13 @@ class _AiClient(object):
         
     def init_gamestate(self):
         if not DominionGameState.isInitied():
-#             player  = next((p for p in self.players if p.id == self.id), None)
-#             players = self.players
-#             board   = dict([(pile.cards[0].__class__,len(pile.cards)) for pile in self.boardcommon])
             player  = self
             players = [player]
             cards   = [card.__class__ for card in self.hand.cards] + [card.__class__ for card in self.deck.cards]
             board   = dict([(pile.cards[0].__class__,len(pile.cards)) for pile in self.boardsetup] + [(pile.cards[0].__class__,len(pile.cards)) for pile in self.boardcommon])
             
-#             gameState = None
-#             gameState = DominionGameState(player, board, cards, players)
-#             QLeaner = QLearning()
-#             QLeaner.learn(gameState)
             self.strategy = QLearnerStrategy(DominionGameState(player, board, cards, players))
             logging.debug( "Policy: %s", self.strategy.getPolicy())
-#             logging.debug( "Q: %s", QLeaner.Q)
-#             logging.debug( "states created: %s", len(DominionGameState.states))
-# #           logging.debug( "actions visited: %s", QLeaner.cards)
-#             self.strategy.init(gameState)
-            
-            
-            if not any([card.cost[1] for card in self.strategy.QLeaner.getPolicy().cardsToBuy.keys()]): self.strategy.QLeaner.getPolicy().pop(Potion)
-            logging.debug( "Policy: %s", self.strategy.getPolicy())
-#             logging.debug( "Q: %s", QLeaner.Q)
-#             logging.debug( "states created: %s", len(DominionGameState.states))
-# #           logging.debug( "actions visited: %s", QLeaner.cards)
-#             self.strategy.init(gameState)
         
     @property
     def active_player(self):
@@ -515,20 +496,20 @@ class _AiClient(object):
         logging.debug("connection failed")
 
     def handle_newhandevent(self, event):
+        self.hand = event.hand
+        self.deck = event.deck
 #         print "Player:",self.id
 #         print "hand ",[card.__class__.__name__ for card in event.hand]
 #         print "deck ",[card.__class__.__name__ for card in event.deck]
-        self.hand = event.hand
-        self.deck = event.deck
         #logging.debug("AICLIENT got hand %s", " ".join([str(c.id) for c in self.hand]))
         
     def handle_newboardsetupevent(self, event):
-#         print "board  ",[(pile.cards[0].__class__.__name__,len(pile.cards)) for pile in event.boardsetup]
         self.boardsetup = event.boardsetup
+#         print "board  ",[(pile.cards[0].__class__.__name__,len(pile.cards)) for pile in event.boardsetup]
         
     def handle_newboardevent(self, event):
-#         print "board ",[card.__class__.__name__ for card in event.board]
         self.board = event.board
+#         print "board ",[card.__class__.__name__ for card in event.board]
     
     def handle_newdeckevent(self, event):
         self.deck = event.deck

@@ -3,6 +3,7 @@ Created on Apr 22, 2014
 
 @author: LuisGustavo
 '''
+from game.cards.common import *
 
 from client.aiclient.Policy import DominionPolicy
 from collections import Counter, defaultdict
@@ -64,6 +65,8 @@ class QLearning:
             if state.gameEnded: break;
         
         self.policy = DominionPolicy(Counter([action for action in self.policy if action]))
+        if not any([card.cost[1] for card in self.policy.cardsToBuy.keys()]): self.policy.pop(Potion)
+
     
     def getPolicy(self):
         if not self.policy: self.compute_policy()
